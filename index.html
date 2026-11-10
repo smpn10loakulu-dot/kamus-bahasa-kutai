@@ -171,4 +171,544 @@
     /* Card */
     .kartu-kata {
       background: var(--card-bg); padding: 20px; border-radius: 12px;
-      box-shadow: 0 4px 6px rgba(0,0
+      box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: transform 0.2s, box-shadow 0.2s;
+      position: relative;
+    }
+    .kartu-kata:hover {
+      transform: translateY(-5px); box-shadow: 0 10px 15px rgba(0,0,0,0.1);
+    }
+    .kartu-kata h3 { color: var(--primary); font-size: 1.5rem; margin-bottom: 10px; text-transform: capitalize; }
+    .kartu-kata p { margin-bottom: 8px; line-height: 1.5; }
+    .label { font-weight: 600; color: var(--text-muted); font-size: 0.9rem; }
+    
+    .btn-suara {
+      position: absolute; top: 20px; right: 20px; background: #e2e8f0; color: #1e293b;
+      border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;
+      font-size: 1.2rem;
+    }
+    .btn-suara:hover { background: #cbd5e1; }
+    .admin-actions { margin-top: 15px; display: none; gap: 8px; }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      padding: 20px;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      border-top: 1px solid #e2e8f0;
+      margin-top: 40px;
+      background: #ffffff;
+    }
+
+    /* Modal */
+    .modal {
+      display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%;
+      background-color: rgba(0,0,0,0.5); align-items: center; justify-content: center;
+    }
+    .modal-content {
+      background-color: #fff; padding: 25px; border-radius: 12px; width: 90%; max-width: 500px;
+    }
+    .modal-content input, .modal-content textarea {
+      width: 100%; padding: 10px; margin: 8px 0 15px 0; border: 1px solid #cbd5e1; border-radius: 6px;
+    }
+    .modal-actions { display: flex; justify-content: flex-end; gap: 10px; }
+  </style>
+</head>
+<body>
+
+  <!-- Admin Bar & School Nav Header -->
+  <div class="admin-bar">
+    <div class="brand-nav">
+      <img src="logo-SMPN10LK.png" alt="Logo SMPN 10 Loa Kulu">
+      <span>SMPN 10 Loa Kulu</span>
+    </div>
+    <div class="admin-buttons">
+      <button id="btn-tambah" class="btn-primary" style="display: none;" onclick="bukaModal('modal-tambah')">+ Tambah Kata</button>
+      <button id="btn-massal" class="btn-massal" style="display: none;" onclick="bukaModal('modal-massal')">📄 Tambah Massal</button>
+      <button id="btn-backup" class="btn-backup" style="display: none;" onclick="bukaModal('modal-backup')">💾 Backup / Restore</button>
+      <button id="btn-ubah-pw" class="btn-ubah-pw" style="display: none;" onclick="bukaModal('modal-password')">🔑 Ubah Password</button>
+      <button id="btn-login" class="btn-login" onclick="bukaModal('modal-login')">Login Admin</button>
+    </div>
+  </div>
+
+  <!-- Hero Section -->
+  <div class="hero">
+    <img src="logo-SMPN10LK.png" alt="Logo SMPN 10 Loa Kulu" class="school-logo">
+    <div class="school-title">SMPN 10 Loa Kulu</div>
+    <h1>Kamus Bahasa Kutai ⇄ Indonesia</h1>
+    <p>Cari kosakata dalam Bahasa Kutai atau artinya dalam Bahasa Indonesia</p>
+    <div class="stat-badge">📊 Total Kosakata: <span id="total-kata-count">0</span> kata</div>
+  </div>
+
+  <!-- Search -->
+  <div class="search-container">
+    <input type="text" id="input-cari" class="search-box" placeholder="Ketik kata yang ingin dicari..." onkeyup="cariKata(true)">
+  </div>
+
+  <!-- Alphabet Filter Bar -->
+  <div class="alphabet-container" id="alphabet-bar">
+    <!-- Tombol A-Z digenerate via Javascript -->
+  </div>
+
+  <!-- Container Hasil -->
+  <div class="container">
+    <div id="hasil-pencarian" class="grid-layout">
+      <p style="text-align:center; grid-column: 1 / -1;">Memuat data dari database...</p>
+    </div>
+
+    <!-- Container Tombol Load More -->
+    <div class="load-more-container" id="load-more-box" style="display: none;">
+      <button class="btn-load-more" onclick="muatLebihBanyak()">📥 Muat Lebih Banyak</button>
+      <div class="info-tampil" id="info-tampil"></div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    &copy; SMPN 10 Loa Kulu - Kamus Digital Bahasa Kutai
+  </footer>
+
+  <!-- Modal Login -->
+  <div id="modal-login" class="modal">
+    <div class="modal-content">
+      <h2>Login Admin</h2>
+      <label>Username:</label>
+      <input type="text" id="login-username" placeholder="Masukkan username">
+      <label>Password:</label>
+      <input type="password" id="login-password" placeholder="Masukkan password">
+      <div class="modal-actions">
+        <button class="btn-login" onclick="tutupModal('modal-login')">Batal</button>
+        <button class="btn-primary" onclick="prosesLoginAdmin()">Login</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Ubah Password Admin -->
+  <div id="modal-password" class="modal">
+    <div class="modal-content">
+      <h2>Ubah Password Admin</h2>
+      <label>Password Lama:</label>
+      <input type="password" id="pw-lama" placeholder="Masukkan password saat ini">
+      <label>Password Baru:</label>
+      <input type="password" id="pw-baru" placeholder="Masukkan password baru">
+      <div class="modal-actions">
+        <button class="btn-login" onclick="tutupModal('modal-password')">Batal</button>
+        <button class="btn-ubah-pw" onclick="prosesUbahPasswordAdmin()">Simpan Password</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Backup & Restore Data -->
+  <div id="modal-backup" class="modal">
+    <div class="modal-content">
+      <h2>Backup & Restore Data</h2>
+      <p style="font-size:0.9rem; color:var(--text-muted); margin-bottom:15px;">Unduh seluruh data sebagai cadangan atau pulihkan data dari file JSON.</p>
+      
+      <div style="border-bottom: 1px solid #e2e8f0; padding-bottom: 15px; margin-bottom: 15px;">
+        <label><b>1. Unduh Data Backup:</b></label><br>
+        <button class="btn-backup" style="margin-top:8px;" onclick="eksporBackupJSON()">📥 Unduh File Backup (.json)</button>
+      </div>
+
+      <div>
+        <label><b>2. Restore File JSON:</b></label>
+        <input type="file" id="file-restore" accept=".json" style="margin-top:8px;">
+        <button class="btn-massal" onclick="imporBackupJSON()">📤 Restore Data</button>
+      </div>
+
+      <div class="modal-actions" style="margin-top: 20px;">
+        <button class="btn-login" onclick="tutupModal('modal-backup')">Tutup</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Tambah/Edit Kata Tunggal -->
+  <div id="modal-tambah" class="modal">
+    <div class="modal-content">
+      <h2 id="modal-title">Tambah Kosakata</h2>
+      <input type="hidden" id="edit-id">
+      <label>Bahasa Kutai:</label>
+      <input type="text" id="input-kutai" placeholder="Contoh: bungas">
+      <label>Arti (Bahasa Indonesia):</label>
+      <input type="text" id="input-indo" placeholder="Contoh: cantik; perawan">
+      <label>Contoh Kalimat:</label>
+      <input type="text" id="input-contoh" placeholder="Contoh: bungas benaran kekanak itu">
+      <label>Link Audio (Opsional - format .mp3):</label>
+      <input type="text" id="input-audio" placeholder="https://contoh.com/suara.mp3">
+      
+      <div class="modal-actions">
+        <button class="btn-login" onclick="tutupModal('modal-tambah')">Batal</button>
+        <button class="btn-primary" onclick="simpanKata()">Simpan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Tambah Massal -->
+  <div id="modal-massal" class="modal">
+    <div class="modal-content">
+      <h2>Tambah Kata Massal</h2>
+      <p style="font-size:0.9rem; color:gray; margin-bottom:10px;">Format: <b>Kutai | Arti | Contoh</b> (Satu kata per baris)</p>
+      <textarea id="input-massal" rows="8" placeholder="berok | monyet besar | &#10;bobos | bocor | perahu itu bobos"></textarea>
+      
+      <div class="modal-actions">
+        <button class="btn-login" onclick="tutupModal('modal-massal')">Batal</button>
+        <button class="btn-massal" onclick="simpanMassal()">Simpan Massal</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PUSTAKA FIREBASE -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+  <script>
+    // ==========================================
+    // 1. KONFIGURASI FIREBASE KUSTOM
+    // ==========================================
+    const firebaseConfig = {
+      apiKey: "AIzaSyBLv3eLnsmwJSbQxP57xBkitmj2B26C3gA",
+      authDomain: "kamus-bahas-kutai.firebaseapp.com",
+      databaseURL: "https://kamus-bahas-kutai-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "kamus-bahas-kutai",
+      storageBucket: "kamus-bahas-kutai.firebasestorage.app",
+      messagingSenderId: "666802153115",
+      appId: "1:666802153115:web:cc80d366654c2dbe6c483e",
+      measurementId: "G-3RRESZWH44"
+    };
+
+    let dbRef;
+    try {
+      firebase.initializeApp(firebaseConfig);
+      const database = firebase.database();
+      dbRef = database.ref('kosakata');
+    } catch (e) {
+      console.error("Firebase belum dikonfigurasi dengan benar.");
+    }
+
+    // ==========================================
+    // 2. VARIABEL GLOBAL & STATE
+    // ==========================================
+    let isAdminLoggedIn = false;
+    let dataKamusGlobal = {};
+    let hurufAktif = '';
+    let limitTampil = 30;
+
+    // Generate Tombol Alfabet A-Z
+    function inisialisasiAlfabet() {
+      const container = document.getElementById('alphabet-bar');
+      let html = `<button class="btn-alpha active" onclick="filterAlfabet('')">Semua</button>`;
+      for (let i = 65; i <= 90; i++) {
+        const huruf = String.fromCharCode(i);
+        html += `<button class="btn-alpha" onclick="filterAlfabet('${huruf}')">${huruf}</button>`;
+      }
+      container.innerHTML = html;
+    }
+    inisialisasiAlfabet();
+
+    // ==========================================
+    // 3. AUTENTIKASI ADMIN TERAMANKAN
+    // ==========================================
+    function prosesLoginAdmin() {
+      const username = document.getElementById('login-username').value.trim();
+      const password = document.getElementById('login-password').value;
+      const passwordValid = localStorage.getItem('adminPassword') || 'admin123';
+
+      if (username === 'admin' && password === passwordValid) {
+        isAdminLoggedIn = true;
+        alert("Login berhasil!");
+        tutupModal('modal-login');
+        document.getElementById('login-username').value = '';
+        document.getElementById('login-password').value = '';
+
+        document.getElementById('btn-tambah').style.display = 'inline-block';
+        document.getElementById('btn-massal').style.display = 'inline-block';
+        document.getElementById('btn-backup').style.display = 'inline-block';
+        document.getElementById('btn-ubah-pw').style.display = 'inline-block';
+        document.getElementById('btn-login').innerText = 'Logout';
+        document.getElementById('btn-login').setAttribute('onclick', 'logoutAdmin()');
+        tampilkanData(dataKamusGlobal); 
+      } else {
+        alert("Username atau Password salah!");
+      }
+    }
+
+    function logoutAdmin() {
+      isAdminLoggedIn = false;
+      document.getElementById('btn-tambah').style.display = 'none';
+      document.getElementById('btn-massal').style.display = 'none';
+      document.getElementById('btn-backup').style.display = 'none';
+      document.getElementById('btn-ubah-pw').style.display = 'none';
+      document.getElementById('btn-login').innerText = 'Login Admin';
+      document.getElementById('btn-login').setAttribute('onclick', "bukaModal('modal-login')");
+      tampilkanData(dataKamusGlobal);
+    }
+
+    function prosesUbahPasswordAdmin() {
+      const pwLama = document.getElementById('pw-lama').value;
+      const pwBaru = document.getElementById('pw-baru').value;
+      const passwordSaatIni = localStorage.getItem('adminPassword') || 'admin123';
+      
+      if (pwLama === passwordSaatIni) {
+        if (pwBaru && pwBaru.length >= 4) {
+          localStorage.setItem('adminPassword', pwBaru);
+          alert("Password berhasil diubah!");
+          tutupModal('modal-password');
+          document.getElementById('pw-lama').value = '';
+          document.getElementById('pw-baru').value = '';
+        } else {
+          alert("Gagal: Password baru minimal 4 karakter.");
+        }
+      } else {
+        alert("Gagal: Password lama salah!");
+      }
+    }
+
+    // ==========================================
+    // 4. OPERASI DATABASE & TAMPILAN DATA
+    // ==========================================
+    if(dbRef) {
+      dbRef.on('value', (snapshot) => {
+        const data = snapshot.val();
+        dataKamusGlobal = data || {};
+        
+        // Update Jumlah Kata
+        const total = Object.keys(dataKamusGlobal).length;
+        document.getElementById('total-kata-count').innerText = total.toLocaleString('id-ID');
+
+        cariKata(true);
+      });
+    }
+
+    function tampilkanData(dataObj) {
+      const container = document.getElementById('hasil-pencarian');
+      const loadMoreBox = document.getElementById('load-more-box');
+      const infoTampil = document.getElementById('info-tampil');
+      container.innerHTML = '';
+
+      const keys = Object.keys(dataObj);
+      const totalHasil = keys.length;
+
+      if (totalHasil === 0) {
+        container.innerHTML = '<p style="grid-column:1/-1; text-align:center;">Tidak ada kosakata yang ditemukan.</p>';
+        loadMoreBox.style.display = 'none';
+        return;
+      }
+
+      // Urutkan kata sesuai abjad Kutai
+      keys.sort((a, b) => (dataObj[a].kutai || '').localeCompare(dataObj[b].kutai || ''));
+
+      // Potong data hanya sebanyak limitTampil
+      const keysTampil = keys.slice(0, limitTampil);
+
+      keysTampil.forEach((key) => {
+        const kata = dataObj[key];
+        const adminStyle = isAdminLoggedIn ? 'display: flex;' : 'display: none;';
+        const audioParam = kata.audio ? `'${kata.audio}'` : `null, '${kata.kutai}'`;
+
+        container.innerHTML += `
+          <div class="kartu-kata">
+            <h3>${kata.kutai}</h3>
+            <button class="btn-suara" onclick="mainkanSuara(${audioParam})" title="Dengarkan Suara">🔊</button>
+            <p><span class="label">Arti:</span> ${kata.indonesia}</p>
+            <p><span class="label">Contoh:</span> <i>${kata.contoh || '-'}</i></p>
+            
+            <div class="admin-actions" style="${adminStyle}">
+              <button class="btn-edit" onclick="siapkanEdit('${key}', '${kata.kutai}', '${kata.indonesia}', '${kata.contoh}', '${kata.audio || ''}')">Edit</button>
+              <button class="btn-danger" onclick="hapusKata('${key}')">Hapus</button>
+            </div>
+          </div>
+        `;
+      });
+
+      // Kontrol Tombol "Muat Lebih Banyak"
+      if (totalHasil > limitTampil) {
+        loadMoreBox.style.display = 'block';
+        infoTampil.innerText = `Menampilkan ${keysTampil.length} dari ${totalHasil} kata yang cocok`;
+      } else {
+        loadMoreBox.style.display = 'none';
+      }
+    }
+
+    function muatLebihBanyak() {
+      limitTampil += 30;
+      cariKata(false);
+    }
+
+    // ==========================================
+    // 5. FITUR PENCARIAN & FILTER ALFABET
+    // ==========================================
+    function filterAlfabet(huruf) {
+      hurufAktif = huruf.toLowerCase();
+      
+      const tombols = document.querySelectorAll('.btn-alpha');
+      tombols.forEach(btn => {
+        if (btn.innerText === (huruf || 'Semua')) {
+          btn.classList.add('active');
+        } else {
+          btn.classList.remove('active');
+        }
+      });
+
+      cariKata(true);
+    }
+
+    function cariKata(resetLimit = true) {
+      if (resetLimit) {
+        limitTampil = 30;
+      }
+
+      const keyword = document.getElementById('input-cari').value.toLowerCase();
+      const dataFilter = {};
+
+      Object.keys(dataKamusGlobal).forEach(key => {
+        const kata = dataKamusGlobal[key];
+        const kataKutai = (kata.kutai || '').toLowerCase();
+        const kataIndo = (kata.indonesia || '').toLowerCase();
+
+        const cocokKeyword = kataKutai.includes(keyword) || kataIndo.includes(keyword);
+        const cocokHuruf = hurufAktif === '' || kataKutai.startsWith(hurufAktif);
+
+        if (cocokKeyword && cocokHuruf) {
+          dataFilter[key] = kata;
+        }
+      });
+
+      tampilkanData(dataFilter);
+    }
+
+    // ==========================================
+    // 6. BACKUP & RESTORE DATA (JSON)
+    // ==========================================
+    function eksporBackupJSON() {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(dataKamusGlobal, null, 2));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", `kamus_kutai_smpn10lk_backup_${new Date().toISOString().slice(0,10)}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+    }
+
+    function imporBackupJSON() {
+      const fileInput = document.getElementById('file-restore');
+      const file = fileInput.files[0];
+      if (!file) {
+        alert("Pilih file .json cadangan terlebih dahulu!");
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const importedData = JSON.parse(e.target.result);
+          if (confirm("Restore data akan mengganti/menambah data yang ada di Firebase. Lanjutkan?")) {
+            dbRef.update(importedData).then(() => {
+              alert("Data berhasil dipulihkan!");
+              tutupModal('modal-backup');
+              fileInput.value = '';
+            });
+          }
+        } catch (err) {
+          alert("Gagal membaca file JSON. Pastikan format file benar.");
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    // ==========================================
+    // 7. INPUT SIMPAN / MASSAL / SUARA / MODAL
+    // ==========================================
+    function simpanKata() {
+      const id = document.getElementById('edit-id').value;
+      const kutai = document.getElementById('input-kutai').value.trim();
+      const indonesia = document.getElementById('input-indo').value.trim();
+      const contoh = document.getElementById('input-contoh').value.trim();
+      const audio = document.getElementById('input-audio').value.trim();
+
+      if (!kutai || !indonesia) {
+        alert("Bahasa Kutai dan Artinya harus diisi!");
+        return;
+      }
+
+      const dataBaru = { kutai, indonesia, contoh, audio };
+
+      if (id) {
+        dbRef.child(id).update(dataBaru).then(() => tutupModal('modal-tambah'));
+      } else {
+        dbRef.push(dataBaru).then(() => tutupModal('modal-tambah'));
+      }
+    }
+
+    function simpanMassal() {
+      const teks = document.getElementById('input-massal').value;
+      const baris = teks.split('\n');
+      let sukses = 0;
+
+      baris.forEach(b => {
+        const bagian = b.split('|');
+        if (bagian.length >= 2) {
+          const kutai = bagian[0].trim();
+          const indonesia = bagian[1].trim();
+          const contoh = bagian[2] ? bagian[2].trim() : "";
+          
+          if (kutai && indonesia) {
+            dbRef.push({ kutai, indonesia, contoh, audio: "" });
+            sukses++;
+          }
+        }
+      });
+      alert(sukses + " kata berhasil ditambahkan!");
+      tutupModal('modal-massal');
+    }
+
+    function hapusKata(id) {
+      if (confirm("Yakin ingin menghapus kata ini?")) {
+        dbRef.child(id).remove();
+      }
+    }
+
+    function mainkanSuara(urlFile, teksFallback) {
+      if (urlFile) {
+        const audio = new Audio(urlFile);
+        audio.play().catch(e => alert("Gagal memutar audio. Pastikan link aktif."));
+      } else if (teksFallback) {
+        if ('speechSynthesis' in window) {
+          const ucapan = new SpeechSynthesisUtterance(teksFallback);
+          ucapan.lang = 'id-ID'; 
+          ucapan.rate = 0.9;     
+          window.speechSynthesis.speak(ucapan);
+        } else {
+          alert("Browser Anda tidak mendukung fitur suara otomatis.");
+        }
+      }
+    }
+
+    function bukaModal(id) {
+      document.getElementById(id).style.display = 'flex';
+      if(id === 'modal-tambah') {
+        document.getElementById('edit-id').value = '';
+        document.getElementById('input-kutai').value = '';
+        document.getElementById('input-indo').value = '';
+        document.getElementById('input-contoh').value = '';
+        document.getElementById('input-audio').value = '';
+        document.getElementById('modal-title').innerText = "Tambah Kosakata";
+      } else if (id === 'modal-massal') {
+        document.getElementById('input-massal').value = '';
+      }
+    }
+
+    function tutupModal(id) {
+      document.getElementById(id).style.display = 'none';
+    }
+
+    function siapkanEdit(id, kutai, indo, contoh, audio) {
+      bukaModal('modal-tambah');
+      document.getElementById('modal-title').innerText = "Edit Kosakata";
+      document.getElementById('edit-id').value = id;
+      document.getElementById('input-kutai').value = kutai;
+      document.getElementById('input-indo').value = indo;
+      document.getElementById('input-contoh').value = contoh;
+      document.getElementById('input-audio').value = audio;
+    }
+  </script>
+</body>
+</html>
